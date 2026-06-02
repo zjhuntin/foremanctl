@@ -111,6 +111,16 @@ There are multiple use cases from the users perspective that dictate what parame
 | --------- | ----------- | ---------------------------- |
 | `--bmc-ipmi-implementation` | IPMI implementation to use for BMC | `--foreman-proxy-bmc-default-provider` |
 | `--bmc-redfish-verify-ssl` | Verify SSL certificates for Redfish BMC connections | `--foreman-proxy-bmc-redfish-verify-ssl` |
+| `--add-feature dns` | Enable DNS feauture | `--foreman-proxy-dns` |
+| `--dns-provider` | Select DNS provider | `--foreman-proxy-dns-provider` |
+| `--foreman-proxy-dns-server` | Configure the target DNS server | `--foreman-proxy-dns-server` |
+| `--foreman-proxy-keyfile` | Confogure the key for the target DNS server | `--foreman-proxy-keyfile` |
+
+##### Unmapped
+
+| foreman-installer Parameter | Description | Reason |
+| --------------------------- | ----------- | ------ |
+| `--foreman-proxy-dns-managed` | Installer managed DNS | not supported |
 
 ### Undetermined
 
@@ -133,11 +143,6 @@ There are multiple use cases from the users perspective that dictate what parame
 | `--foreman-proxy-dhcp-server` | | foreman_proxy | dhcp_server |
 | `--foreman-proxy-libvirt-network` | | foreman_proxy | libvirt_network |
 | `--foreman-proxy-libvirt-url` | | foreman_proxy | libvirt_url |
-| `--foreman-proxy-dns` | | foreman_proxy | dns |
-| `--foreman-proxy-dns-managed` | | foreman_proxy | dns_managed |
-| `--foreman-proxy-dns-provider` | | foreman_proxy | foreman_proxy::dns_provider |
-| `--foreman-proxy-dns-server` | | foreman_proxy | foreman_proxy::dns_server |
-| `--foreman-proxy-keyfile` | | foreman_proxy | foreman_proxy::keyfile |
 | `--foreman-proxy-plugin-dns-powerdns-rest-api-key` | | foreman_proxy::plugin::dns_powerdns | rest_api_key |
 | `--foreman-proxy-plugin-dns-powerdns-rest-url` | | foreman_proxy::plugin::dns_powerdns | rest_url |
 | `--foreman-proxy-plugin-dns-route53-aws-access-key` | | foreman_proxy::plugin::dns_route53 | aws_access_key |
