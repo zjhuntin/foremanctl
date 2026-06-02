@@ -58,3 +58,16 @@ bmc:
   description: Power management for bare metal hosts (IPMI, Redfish)
   foreman_proxy:
     plugin_name: bmc
+ansible:
+  description: Ansible plugin for Foreman (configuration management)
+  foreman:
+    plugin_name: foreman_ansible
+  hammer: foreman_ansible
+  dependencies:
+    - tasks
+kubevirt:
+  description: KubeVirt plugin for Foreman (Kubernetes VM provisioning)
+  foreman:
+    plugin_name: foreman_kubevirt
+  dependencies:
+    - katello
