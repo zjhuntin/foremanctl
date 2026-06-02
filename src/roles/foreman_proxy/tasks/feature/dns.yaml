@@ -1,0 +1,8 @@
+---
+- name: Include tasks for {{ foreman_proxy_dns_provider_name }}
+  ansible.builtin.include_tasks: feature.yaml
+  vars:
+    feature_enabled: "true"
+    feature_name: "{{ foreman_proxy_dns_provider_name }}"
+
+# FIXME: disable other dns providers
