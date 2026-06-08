@@ -1,0 +1,10 @@
+---
+openvox_server_container_image: localhost/openvox-server
+openvox_server_container_tag: "latest"
+openvox_server_registry_auth_file: /etc/foreman/registry-auth.json
+
+openvox_server_port: 8140
+openvox_server_java_args: "-Xms512m -Xmx512m"
+openvox_server_max_active_instances: 1
+openvox_server_autosign: true
+openvox_server_environment_timeout: unlimited

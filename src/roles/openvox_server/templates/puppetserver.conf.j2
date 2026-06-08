@@ -1,0 +1,12 @@
+puppetserver: {
+    ruby-load-path: [/opt/puppetlabs/puppet/lib/ruby/vendor_ruby]
+    gem-home: /opt/puppetlabs/server/data/puppetserver/jruby-gems
+    gem-path: [${puppetserver.gem-home}]
+    master-conf-dir: /etc/puppetlabs/puppet
+    master-code-dir: /etc/puppetlabs/code
+    master-var-dir: /opt/puppetlabs/server/data/puppetserver
+    master-run-dir: /var/run/puppetlabs/puppetserver
+    master-log-dir: /var/log/puppetlabs/puppetserver
+    max-active-instances: {{ openvox_server_max_active_instances }}
+    max-requests-per-instance: 0
+}

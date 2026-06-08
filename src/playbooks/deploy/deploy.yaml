@@ -49,6 +49,9 @@
       when:
         - "'iop' in enabled_features"
         - database_mode == 'internal'
+    - role: openvox_server
+      when:
+        - "'puppet' in enabled_features"
     - role: foreman_proxy
       when:
         - "'foreman-proxy' in enabled_features"

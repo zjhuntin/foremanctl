@@ -1,0 +1,106 @@
+---
+- name: Pull OpenVox Server container image
+  containers.podman.podman_image:
+    name: "{{ openvox_server_container_image }}:{{ openvox_server_container_tag }}"
+    state: present
+  environment:
+    REGISTRY_AUTH_FILE: "{{ openvox_server_registry_auth_file }}"
+
+- name: Create OpenVox data directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - /var/lib/openvox
+    - /var/lib/openvox/code/environments/production/manifests
+    - /var/lib/openvox/code/environments/production/modules
+    - /var/lib/openvox/import
+
+- name: Create OpenVox log directory
+  ansible.builtin.file:
+    path: /var/log/openvox
+    state: directory
+    mode: '0750'
+
+- name: Configure certificates
+  ansible.builtin.include_tasks:
+    file: certs.yml
+
+- name: Write puppet.conf
+  ansible.builtin.copy:
+    content: "{{ lookup('ansible.builtin.template', 'puppet.conf.j2') }}"
+    dest: /var/lib/openvox/puppet.conf
+    mode: '0644'
+
+- name: Import foremanctl CA into puppet (first-time setup)
+  ansible.builtin.shell: |
+    podman run --rm \
+      --security-opt label=disable \
+      -v /var/lib/openvox/import:/import:ro \
+      -v /var/lib/openvox/puppetserver/ca:/etc/puppetlabs/puppetserver/ca \
+      -v /var/lib/openvox/ssl:/etc/puppetlabs/puppet/ssl \
+      -v /var/lib/openvox/puppet.conf:/etc/puppetlabs/puppet/puppet.conf \
+      --entrypoint /opt/puppetlabs/server/bin/puppetserver \
+      {{ openvox_server_container_image }}:{{ openvox_server_container_tag }} \
+      ca import \
+        --cert-bundle /import/ca-bundle.pem \
+        --crl-chain /import/crl-chain.pem \
+        --private-key /import/ca-key.pem
+  args:
+    creates: /var/lib/openvox/puppetserver/ca/ca_crt.pem
+  register: _ca_import_result
+  ignore_errors: true
+
+- name: Set ownership on OpenVox directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    recurse: true
+    owner: '52'
+    group: '52'
+  loop:
+    - /var/lib/openvox/ssl
+    - /var/lib/openvox/puppetserver
+    - /var/lib/openvox/code
+    - /var/log/openvox
+
+- name: Deploy OpenVox Server container
+  containers.podman.podman_container:
+    name: "openvox-server"
+    image: "{{ openvox_server_container_image }}:{{ openvox_server_container_tag }}"
+    state: quadlet
+    network: host
+    hostname: "{{ ansible_facts['hostname'] }}.local"
+    security_opt:
+      - "label=disable"
+    env:
+      JAVA_ARGS: "{{ openvox_server_java_args }}"
+    volumes:
+      - /var/lib/openvox/ssl:/etc/puppetlabs/puppet/ssl
+      - /var/lib/openvox/puppetserver/ca:/etc/puppetlabs/puppetserver/ca
+      - /var/lib/openvox/code:/etc/puppetlabs/code
+      - /var/lib/openvox/puppet.conf:/etc/puppetlabs/puppet/puppet.conf
+      - /var/log/openvox:/var/log/puppetlabs/puppetserver
+    quadlet_options:
+      - |
+        [Install]
+        WantedBy=default.target foreman.target
+        [Unit]
+        PartOf=foreman.target
+        [Service]
+        TimeoutStartSec=300
+  notify:
+    - Restart openvox-server
+
+- name: Run daemon reload
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Flush handlers to restart services
+  ansible.builtin.meta: flush_handlers
+
+- name: Start OpenVox Server
+  ansible.builtin.systemd:
+    name: openvox-server
+    state: started

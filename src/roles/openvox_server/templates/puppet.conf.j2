@@ -1,0 +1,9 @@
+[main]
+certname = {{ ansible_facts['fqdn'] }}
+server = {{ ansible_facts['fqdn'] }}
+autosign = {{ openvox_server_autosign | lower }}
+ssldir = /etc/puppetlabs/puppet/ssl
+vardir = /opt/puppetlabs/server/data/puppetserver
+
+[server]
+environment_timeout = {{ openvox_server_environment_timeout }}

@@ -1,0 +1,44 @@
+---
+# Prepare certificate files for `puppetserver ca import`
+# This imports foremanctl's CA as puppet's signing authority,
+# so all foremanctl-signed certs are trusted by puppet and vice versa.
+
+- name: Create import directory
+  ansible.builtin.file:
+    path: /var/lib/openvox/import
+    state: directory
+    mode: '0700'
+
+- name: Create puppetserver config directory
+  ansible.builtin.file:
+    path: /var/lib/openvox/puppetserver
+    state: directory
+    mode: '0755'
+
+- name: Decrypt CA key (puppetserver requires passphrase-free key)
+  ansible.builtin.command: openssl pkey -in "{{ ca_key }}" -passin "file:{{ ca_key_password }}"
+  register: _openvox_ca_key_plain
+  changed_when: false
+
+- name: Write passphrase-free CA key for import
+  ansible.builtin.copy:
+    content: "{{ _openvox_ca_key_plain.stdout }}"
+    dest: /var/lib/openvox/import/ca-key.pem
+    mode: '0600'
+
+- name: Copy CA certificate as cert bundle for import
+  ansible.builtin.copy:
+    src: "{{ ca_certificate }}"
+    dest: /var/lib/openvox/import/ca-bundle.pem
+    mode: '0644'
+    remote_src: true
+
+- name: Generate CRL for import
+  community.crypto.x509_crl:
+    path: /var/lib/openvox/import/crl-chain.pem
+    privatekey_content: "{{ _openvox_ca_key_plain.stdout }}"
+    issuer:
+      CN: "{{ certificates_ca_subject }}"
+    last_update: "+0s"
+    next_update: "+3650d"
+    revoked_certificates: []
