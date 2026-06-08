@@ -1,0 +1,49 @@
+---
+- name: Create puppet_proxy_puppet_api config secret
+  containers.podman.podman_secret:
+    state: present
+    name: foreman-proxy-puppet_proxy_puppet_api-yml
+    data: "{{ lookup('ansible.builtin.template', 'settings.d/puppet_proxy_puppet_api.yml.j2') }}"
+  notify:
+    - Restart Foreman Proxy
+    - Refresh Foreman Proxy
+
+- name: Create puppet SSL CA secret for proxy
+  containers.podman.podman_secret:
+    state: present
+    name: foreman-proxy-puppet-ssl-ca
+    path: "{{ ca_certificate }}"
+  notify:
+    - Restart Foreman Proxy
+
+- name: Create puppet SSL cert secret for proxy
+  containers.podman.podman_secret:
+    state: present
+    name: foreman-proxy-puppet-ssl-cert
+    path: "{{ server_certificate }}"
+  notify:
+    - Restart Foreman Proxy
+
+- name: Create puppet SSL key secret for proxy
+  containers.podman.podman_secret:
+    state: present
+    name: foreman-proxy-puppet-ssl-key
+    path: "{{ server_key }}"
+  notify:
+    - Restart Foreman Proxy
+
+- name: Mount puppet secrets in proxy
+  ansible.builtin.copy:
+    dest: /etc/containers/systemd/foreman-proxy.container.d/puppet-certs.conf
+    content: |
+      [Container]
+      Secret=foreman-proxy-puppet_proxy_puppet_api-yml,type=mount,target=/etc/foreman-proxy/settings.d/puppet_proxy_puppet_api.yml
+      Secret=foreman-proxy-puppet-ssl-ca,type=mount,target=/etc/foreman-proxy/puppet_ssl_ca.pem
+      Secret=foreman-proxy-puppet-ssl-cert,type=mount,target=/etc/foreman-proxy/puppet_ssl_cert.pem
+      Secret=foreman-proxy-puppet-ssl-key,type=mount,target=/etc/foreman-proxy/puppet_ssl_key.pem
+    mode: '0644'
+    owner: root
+    group: root
+  notify:
+    - Restart Foreman Proxy
+    - Refresh Foreman Proxy

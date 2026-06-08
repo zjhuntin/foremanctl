@@ -1,0 +1,5 @@
+---
+:puppet_url: https://{{ ansible_facts['fqdn'] }}:{{ openvox_server_port | default(8140) }}
+:puppet_ssl_ca: /etc/foreman-proxy/puppet_ssl_ca.pem
+:puppet_ssl_cert: /etc/foreman-proxy/puppet_ssl_cert.pem
+:puppet_ssl_key: /etc/foreman-proxy/puppet_ssl_key.pem
