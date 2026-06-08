@@ -1,0 +1,13 @@
+---
+:url: "https://{{ ansible_facts['fqdn'] }}"
+:ssl_ca: "/etc/puppetlabs/puppet/ssl/certs/ca.pem"
+:ssl_cert: "/etc/puppetlabs/puppet/ssl/certs/{{ ansible_facts['fqdn'] }}.pem"
+:ssl_key: "/etc/puppetlabs/puppet/ssl/private_keys/{{ ansible_facts['fqdn'] }}.pem"
+:puppetdir: "/opt/puppetlabs/server/data/puppetserver"
+:puppetuser: "puppet"
+:facts: true
+:fact_extension: "yaml"
+:timeout: 60
+:report_timeout: 60
+:report_retry_limit: 1
+:threads: null

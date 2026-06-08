@@ -14,21 +14,15 @@
 - [x] Puppet proxy feature registered in Foreman
 - [x] Proxy can list puppet environments from openvox
 - [x] Shared CA trust — foremanctl-signed certs trusted by openvox
+- [x] Auth.conf — environment_classes API access (template added)
+- [x] ENC script — mounted from puppetserver_foreman (enc.rb)
+- [x] Report processor — mounted from puppetserver_foreman (report.rb)
+- [x] foreman.yaml — configured with Foreman URL + SSL certs
+- [x] Facts upload — enabled via foreman.yaml `:facts: true`
 
 ## What's NOT working yet (needs fixes)
 
-### 1. Auth.conf — environment_classes API access
-The proxy gets 403 when trying to import classes because `/puppet/v3/environment_classes`
-is denied by default in puppetserver's auth.conf. Need to mount a custom auth.conf that
-allows the proxy to access class listing APIs.
-
-**In non-container (installer):** The puppet module configures auth.conf automatically
-via `puppet::server::config`.
-
-**Fix:** Add auth.conf template to the role with rules allowing the proxy host to
-access environment and class APIs.
-
-### 2. SELinux label handling
+### 1. SELinux label handling
 The container requires `--security-opt label=disable` because puppetserver tries to
 chmod SSL and log directories on startup, which conflicts with SELinux labels on
 bind-mounted volumes.
@@ -39,41 +33,6 @@ bind-mounted volumes.
 - Use named volumes instead of bind mounts for SSL/CA dirs
 - Set proper SELinux contexts with `semanage fcontext`
 - Or accept `label=disable` as foremanctl's pattern (other containers use `:Z` label)
-
-### 3. ENC (External Node Classifier) integration
-Puppetserver needs to call Foreman's ENC endpoint to get node classifications.
-This requires:
-- An ENC script in the container that calls Foreman's API
-- puppet.conf `external_nodes` pointing to that script
-- `node_terminus = exec` in puppet.conf
-
-**In non-container (installer):** The `puppet::server::enc` class installs the ENC
-script and configures puppet.conf. The `puppetserver_foreman` module installs the
-ENC script at `/etc/puppetlabs/puppet/node.rb`.
-
-**Fix:** Mount the `puppetserver_foreman` ENC script into the container, or package
-it in the image. Configure puppet.conf template with `external_nodes` and `node_terminus`.
-
-### 4. Report processor — puppet reports to Foreman
-Puppetserver needs to forward reports to Foreman so puppet runs appear in the UI.
-This requires:
-- The `foreman` report processor installed in the server
-- `reports = foreman` in puppet.conf
-- Foreman URL and SSL credentials configured in `/etc/puppetlabs/puppet/foreman.yaml`
-
-**In non-container (installer):** The `puppetserver_foreman` module installs the
-report processor and configures foreman.yaml.
-
-**Fix:** Include the `puppetserver_foreman` gem/scripts in the container image and
-mount a foreman.yaml config secret.
-
-### 5. Facts upload — puppet facts to Foreman
-The ENC script can be configured to upload facts to Foreman on each puppet run.
-This is controlled by `enc_upload_facts` in the foreman ENC config.
-
-**In non-container (installer):** Configured via `puppetserver_foreman` module.
-
-**Fix:** Part of the ENC integration (item 3).
 
 ### 6. Puppet CA proxy feature
 The foreman-proxy can also proxy puppetserver CA operations (sign/revoke certs
@@ -110,14 +69,14 @@ install hammer CLI plugins inside the foreman container, not on the host.
 | Puppet proxy feature | `--foreman-proxy-puppet true` | puppet.yml.j2 + feature task | Working |
 | Puppet CA proxy | `--foreman-proxy-puppetca true` | Not implemented | TODO |
 | Shared CA trust | Installer manages Puppet CA | `puppetserver ca import` with foremanctl CA | Working |
-| ENC integration | `puppet::server::enc` + `puppetserver_foreman` | Not implemented | TODO |
-| Report forwarding | `puppet::server::foreman` + report processor | Not implemented | TODO |
-| Facts upload | ENC config `enc_upload_facts` | Not implemented | TODO |
-| Auth.conf | `puppet::server::config` | Not implemented (403 on class import) | TODO |
+| ENC integration | `puppet::server::enc` + `puppetserver_foreman` | enc.rb mounted, puppet.conf configured | Implemented |
+| Report forwarding | `puppet::server::foreman` + report processor | report.rb mounted as foreman report processor | Implemented |
+| Facts upload | ENC config `enc_upload_facts` | foreman.yaml `:facts: true` | Implemented |
+| Auth.conf | `puppet::server::config` | auth.conf.j2 with environment_classes rule | Implemented |
 | Autosign | `--puppet-autosign true` | puppet.conf `autosign = true` | Working |
 | Hammer CLI | `--enable-foreman-cli-puppet` | Install in foreman container | Working (manual step) |
 | Environment management | File-based environments | Bind-mount /var/lib/openvox/code | Working |
-| Module import via proxy | auth.conf + environment_classes API | Blocked by auth.conf | TODO |
+| Module import via proxy | auth.conf + environment_classes API | auth.conf allows, proxy configured | Implemented |
 
 ## Priority order for remaining work
 

@@ -7,3 +7,6 @@ vardir = /opt/puppetlabs/server/data/puppetserver
 
 [server]
 environment_timeout = {{ openvox_server_environment_timeout }}
+external_nodes = /etc/puppetlabs/puppet/node.rb
+node_terminus = exec
+reports = foreman

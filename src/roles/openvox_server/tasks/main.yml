@@ -16,6 +16,8 @@
     - /var/lib/openvox/code/environments/production/manifests
     - /var/lib/openvox/code/environments/production/modules
     - /var/lib/openvox/import
+    - /var/lib/openvox/conf.d
+    - /var/lib/openvox/foreman
 
 - name: Create OpenVox log directory
   ansible.builtin.file:
@@ -31,6 +33,34 @@
   ansible.builtin.copy:
     content: "{{ lookup('ansible.builtin.template', 'puppet.conf.j2') }}"
     dest: /var/lib/openvox/puppet.conf
+    mode: '0644'
+
+- name: Write auth.conf
+  ansible.builtin.copy:
+    content: "{{ lookup('ansible.builtin.template', 'auth.conf.j2') }}"
+    dest: /var/lib/openvox/conf.d/auth.conf
+    mode: '0644'
+  notify:
+    - Restart openvox-server
+
+- name: Write foreman.yaml
+  ansible.builtin.copy:
+    content: "{{ lookup('ansible.builtin.template', 'foreman.yaml.j2') }}"
+    dest: /var/lib/openvox/foreman/foreman.yaml
+    mode: '0644'
+  notify:
+    - Restart openvox-server
+
+- name: Install ENC script
+  ansible.builtin.copy:
+    src: enc.rb
+    dest: /var/lib/openvox/foreman/node.rb
+    mode: '0755'
+
+- name: Install report processor
+  ansible.builtin.copy:
+    src: report.rb
+    dest: /var/lib/openvox/foreman/foreman.rb
     mode: '0644'
 
 - name: Import foremanctl CA into puppet (first-time setup)
@@ -81,6 +111,10 @@
       - /var/lib/openvox/puppetserver/ca:/etc/puppetlabs/puppetserver/ca
       - /var/lib/openvox/code:/etc/puppetlabs/code
       - /var/lib/openvox/puppet.conf:/etc/puppetlabs/puppet/puppet.conf
+      - /var/lib/openvox/conf.d/auth.conf:/etc/puppetlabs/puppetserver/conf.d/auth.conf
+      - /var/lib/openvox/foreman/foreman.yaml:/etc/puppetlabs/puppet/foreman.yaml
+      - /var/lib/openvox/foreman/node.rb:/etc/puppetlabs/puppet/node.rb
+      - /var/lib/openvox/foreman/foreman.rb:/opt/puppetlabs/puppet/lib/ruby/vendor_ruby/puppet/reports/foreman.rb
       - /var/log/openvox:/var/log/puppetlabs/puppetserver
     quadlet_options:
       - |
