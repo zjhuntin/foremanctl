@@ -71,3 +71,40 @@ kubevirt:
     plugin_name: foreman_kubevirt
   dependencies:
     - katello
+puppet:
+  description: Puppet/OpenVox integration for configuration management
+  foreman:
+    plugin_name: foreman_puppet
+  foreman_proxy:
+    plugin_name: puppet
+  hammer: foreman_puppet
+discovery:
+  description: Bare metal discovery and provisioning
+  foreman:
+    plugin_name: foreman_discovery
+openscap:
+  description: Security compliance scanning via OpenSCAP
+  foreman:
+    plugin_name: foreman_openscap
+webhooks:
+  description: Webhook event notifications
+  foreman:
+    plugin_name: foreman_webhooks
+templates:
+  description: Template sync with Git repositories
+  foreman:
+    plugin_name: foreman_templates
+virt-who:
+  description: virt-who hypervisor configuration
+  foreman:
+    plugin_name: foreman_virt_who_configure
+leapp:
+  description: RHEL upgrade planning via Leapp
+  foreman:
+    plugin_name: foreman_leapp
+  dependencies:
+    - remote-execution
+bootdisk:
+  description: Boot disk provisioning
+  foreman:
+    plugin_name: foreman_bootdisk
