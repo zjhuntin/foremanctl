@@ -16,19 +16,19 @@
   notify:
     - Restart Foreman Proxy
 
-- name: Create puppet SSL cert secret for proxy
+- name: Create puppet SSL cert secret for proxy (uses openvox-issued cert with clientAuth)
   containers.podman.podman_secret:
     state: present
     name: foreman-proxy-puppet-ssl-cert
-    path: "{{ server_certificate }}"
+    path: "/var/lib/openvox/ssl/certs/{{ ansible_facts['fqdn'] }}.pem"
   notify:
     - Restart Foreman Proxy
 
-- name: Create puppet SSL key secret for proxy
+- name: Create puppet SSL key secret for proxy (uses openvox-issued key)
   containers.podman.podman_secret:
     state: present
     name: foreman-proxy-puppet-ssl-key
-    path: "{{ server_key }}"
+    path: "/var/lib/openvox/ssl/private_keys/{{ ansible_facts['fqdn'] }}.pem"
   notify:
     - Restart Foreman Proxy
 
