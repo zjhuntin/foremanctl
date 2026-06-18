@@ -27,6 +27,7 @@
     - role: postgresql
       when:
         - database_mode == 'internal'
+        - "'foreman' in enabled_features or 'katello' in enabled_features"
     - role: redis
       when: "'foreman' in enabled_features or 'katello' in enabled_features"
     - role: candlepin
